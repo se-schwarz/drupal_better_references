@@ -1,0 +1,9 @@
+name = Better References
+description = Provides functions and features for an easier use of entity references
+package = Fields
+core = 7.x
+dependencies[] = entityreference
+
+version = "7.x-0.1"
+core = "7.x"
+

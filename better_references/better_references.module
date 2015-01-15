@@ -1,0 +1,56 @@
+<?php
+
+require_once('includes/better_references.func.inc');
+
+/**
+ * Hooks into the page and provides the $content_regions variable which contains the
+ * content nodes.
+ **/
+function better_references_preprocess_page(&$variables) {
+  $variables['content_regions'] = array();
+  $region_list = array_keys(system_region_list(variable_get('theme_default')));
+  if(isset($variables['node'])) {
+    $node = $variables['node'];
+
+    $variables['theme_hook_suggestions'][] = 'page__'.$node->type;
+
+    foreach ($region_list as $region) {
+      $region_content = array();
+
+      // Get field name and content
+      $field_name = 'field_region_'.$region;
+      $region_subnodes = field_get_items('node', $node, $field_name);
+
+      // Check if the region has nodes, if not, set the region variable to false and continue
+      if ($region_subnodes === false) {
+        $variables['content_regions'][$region] = false;
+        continue;
+      }
+
+      // Get node ids
+      $subnode_nids = array();
+      foreach($region_subnodes as $subnode)
+          array_push($subnode_nids, $subnode['target_id']);
+
+      foreach ($subnode_nids as $subnode_nid) {
+        $subnode_nid = better_references_language_get_matching_nid($subnode_nid);
+        $subnode = node_load($subnode_nid);
+        //Check if we have a loaded node and push it into the regions array
+        if($subnode)
+            array_push($region_content, $subnode);
+      }
+      $variables['content_regions'][$region] = $region_content;
+    }
+  }
+  else {
+    // We have no node, set all region variables to false, so checks don't fail and produce warnings
+    foreach($region_list as $region) {
+      $variables['content_regions'][$region] = false;
+    }
+  }
+}
+
+
+
+  
+
