@@ -21,9 +21,9 @@ function better_references_preprocess_page(&$variables) {
       $field_name = 'field_region_'.$region;
       $region_subnodes = field_get_items('node', $node, $field_name);
 
-      // Check if the region has nodes, if not, set the region variable to false and continue
+      $variables['content_regions'][$region] = array();
+      // Check for children, if the region as no children just continue with the next region
       if ($region_subnodes === false) {
-        $variables['content_regions'][$region] = false;
         continue;
       }
 
@@ -35,9 +35,9 @@ function better_references_preprocess_page(&$variables) {
       foreach ($subnode_nids as $subnode_nid) {
         $subnode_nid = better_references_language_get_matching_nid($subnode_nid);
         $subnode = node_load($subnode_nid);
-        //Check if we have a loaded node and push it into the regions array
-        if($subnode)
-            array_push($region_content, $subnode);
+        // Check if we found a child node and the user has access to it
+        if ($subnode && node_access('view', $subnode))
+          array_push($region_content, $subnode);
       }
       $variables['content_regions'][$region] = $region_content;
     }
@@ -48,6 +48,17 @@ function better_references_preprocess_page(&$variables) {
       $variables['content_regions'][$region] = false;
     }
   }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ * Adds the content_width to all pages containing the field
+ * @param $variables
+ */
+function better_references_preprocess_node(&$variables) {
+  $content_width = field_get_items('node', $variables['node'], 'field_content_width');
+  if ($content_width)
+    $variables['content_width'] = $content_width[0]['value'];
 }
 
 

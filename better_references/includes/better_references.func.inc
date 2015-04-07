@@ -36,8 +36,8 @@ function better_references_get_node_list($node, $field_name) {
   foreach ($items as $item) {
     $item_nid = better_references_language_get_matching_nid($item['target_id']);
     $item = node_load($item_nid);
-    //Check if we have a loaded node and push it into the regions array
-    if($item)
+    //Check if we have a loaded node and the user has acces to it and push it into the regions array
+    if ($item && node_access('view', $item))
       array_push($nodes, $item);
   }
   return $nodes;
@@ -54,11 +54,9 @@ function better_references_render($parent, $node_list, $parent_list=array()) {
   $rendered_nodes = array();
   foreach($node_list as $node) {
     $node->better_references_parent_list = $parent_list;
-    $theme_hook_suggestions = better_references_get_theme_hook_suggestions($node, $parent_list);
-    if (isset($node->theme_hook_suggestions)) {
-      $node->theme_hook_suggestions = array_merge($node->theme_hook_suggestions, $theme_hook_suggestions);
-    } else {
-      $node->theme_hook_suggestions = $theme_hook_suggestions;
+    $theme_hook_suggestion = better_references_get_theme_hook_suggestions($node, $parent_list);
+    if ($theme_hook_suggestion) {
+      $node->theme_hook_suggestion = $theme_hook_suggestion;
     }
     $node_view = node_view($node);
     $rendered_nodes[] = drupal_render($node_view);
@@ -105,18 +103,18 @@ function better_references_render_grid($parent, $node_list, $parent_list=array()
  * @return array
  */
 function better_references_get_theme_hook_suggestions($node, $parent_list) {
-  $suggestions = array();
+  $suggestion = array();
   if ($parent_list) {
     $direct_parent = $parent_list[count($parent_list)-1];
-    $suggestions[] = 'node__parent_'.$direct_parent.'__'.$node->type;
-    if (count($parent_list > 1)) {
-      $suggestion = 'node__';
-      foreach($parent_list as $parent) {
-        $suggestion .= 'parent_'.$parent.'__';
-      }
-      $suggestion .= $node->type;
-      $suggestions[] = $suggestion;
-    }
+    $suggestion = 'node__parent_'.$direct_parent.'__'.$node->type;
+  //  #if (count($parent_list > 1)) {
+  //  #  $suggestion = 'node__';
+  //  #  foreach($parent_list as $parent) {
+  //  #    $suggestion .= 'parent_'.$parent.'__';
+  //  #  }
+  //  #  $suggestion .= $node->type;
+  //  #  $suggestions[] = $suggestion;
+  //  #}
   }
-  return $suggestions;
+  return $suggestion;
 }
